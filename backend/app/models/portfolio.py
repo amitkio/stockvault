@@ -1,27 +1,42 @@
-# models/portfolio.py
+from __future__ import annotations
+from datetime import datetime
+from typing import List, TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import String, func, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base
+from app.extensions import Base
+
+if TYPE_CHECKING:
+    from app.models import User, Holding, Transaction
+
 
 class Portfolio(Base):
     """
     Represents a portfolio in the 'portfolios' table.
     Each portfolio belongs to one user.
     """
-    __tablename__ = 'portfolios'
 
-    portfolio_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users.user_id'), nullable=False)
-    portfolio_name = Column(String(100), nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    __tablename__ = "portfolios"
+
+    portfolio_id: Mapped[int] = mapped_column(
+        primary_key=True, autoincrement=True, init=False
+    )
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
+    portfolio_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
-    user = relationship("User", back_populates="portfolios")
-    holdings = relationship("Holding", back_populates="portfolio", cascade="all, delete-orphan")
-    transactions = relationship("Transaction", back_populates="portfolio", cascade="all, delete-orphan")
+    user: Mapped["User"] = relationship(back_populates="portfolios")
+    holdings: Mapped[List["Holding"]] = relationship(
+        back_populates="portfolio", cascade="all, delete-orphan"
+    )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="portfolio", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Portfolio(portfolio_id={self.portfolio_id}, name='{self.portfolio_name}')>"

@@ -1,24 +1,31 @@
-# models/stock.py
+from __future__ import annotations
+from typing import List, TYPE_CHECKING
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
+from app.extensions import Base
 
-from .base import Base
+if TYPE_CHECKING:
+    from app.models import Holding, Transaction
+
 
 class Stock(Base):
     """
     Represents a stock in the 'stocks' table.
     """
-    __tablename__ = 'stocks'
 
-    stock_id = Column(Integer, primary_key=True)
-    symbol = Column(String(10), unique=True, nullable=False)
-    company_name = Column(String(255), nullable=False)
-    sector = Column(String(100), nullable=True)
+    __tablename__ = "stocks"
+
+    stock_id: Mapped[int] = mapped_column(
+        primary_key=True, autoincrement=True, init=False
+    )
+    symbol: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    sector: Mapped[str] = mapped_column(String(100), nullable=True)
 
     # Relationships
-    holdings = relationship("Holding", back_populates="stock")
-    transactions = relationship("Transaction", back_populates="stock")
+    holdings: Mapped[List["Holding"]] = relationship(back_populates="stock")
+    transactions: Mapped[List["Transaction"]] = relationship(back_populates="stock")
 
     def __repr__(self):
         return f"<Stock(stock_id={self.stock_id}, symbol='{self.symbol}')>"
