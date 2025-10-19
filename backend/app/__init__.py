@@ -17,6 +17,12 @@ def create_app() -> Flask:
 
     flask_app.register_blueprint(auth_bp)
 
+    
+    from app.routes.portfolio_routes import portfolio_bp
+
+    flask_app.register_blueprint(portfolio_bp)
+
+
     @flask_app.after_request
     def add_cors_headers(response):
         response.headers.add("Access-Control-Allow-Origin", "*")
