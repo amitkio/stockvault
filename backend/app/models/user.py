@@ -28,7 +28,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(server_default=func.now(), init=False)
 
     portfolios: Mapped[List["Portfolio"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", init=False
+        back_populates="user", cascade="all, delete-orphan", init=False, default_factory=list
     )
 
     def __repr__(self):

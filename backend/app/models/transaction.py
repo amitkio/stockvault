@@ -39,11 +39,11 @@ class Transaction(Base):
     price_per_share: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
 
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship(back_populates="transactions")
-    stock: Mapped["Stock"] = relationship(back_populates="transactions")
+    portfolio: Mapped["Portfolio"] = relationship(back_populates="transactions", init=False)
+    stock: Mapped["Stock"] = relationship(back_populates="transactions", init=False)
 
     transaction_date: Mapped[datetime] = mapped_column(
-        nullable=False, default=datetime.utcnow
+        nullable=False, default=datetime.utcnow, init=False
     )
 
     def __repr__(self):

@@ -26,14 +26,14 @@ class Holding(Base):
     portfolio_id: Mapped[int] = mapped_column(ForeignKey("portfolios.portfolio_id"))
     stock_id: Mapped[int] = mapped_column(ForeignKey("stocks.stock_id"))
     # Relationships
-    portfolio: Mapped["Portfolio"] = relationship(back_populates="holdings")
-    stock: Mapped["Stock"] = relationship(back_populates="holdings")
+    portfolio: Mapped["Portfolio"] = relationship(back_populates="holdings", init=False)
+    stock: Mapped["Stock"] = relationship(back_populates="holdings", init=False)
 
     average_cost_per_share: Mapped[Decimal] = mapped_column(
         Numeric(18, 4), nullable=False
     )
     last_updated: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        server_default=func.now(), onupdate=func.now(), init=False
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(18, 8), nullable=False, default=0)
 

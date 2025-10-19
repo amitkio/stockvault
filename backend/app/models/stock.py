@@ -24,8 +24,12 @@ class Stock(Base):
     sector: Mapped[str] = mapped_column(String(100), nullable=True)
 
     # Relationships
-    holdings: Mapped[List["Holding"]] = relationship(back_populates="stock")
-    transactions: Mapped[List["Transaction"]] = relationship(back_populates="stock")
+    holdings: Mapped[List["Holding"]] = relationship(
+        back_populates="stock", init=False, default_factory=list
+    )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="stock", init=False, default_factory=list
+    )
 
     def __repr__(self):
         return f"<Stock(stock_id={self.stock_id}, symbol='{self.symbol}')>"

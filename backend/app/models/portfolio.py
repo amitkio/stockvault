@@ -24,18 +24,20 @@ class Portfolio(Base):
     )
     user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
     portfolio_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(), init=False
+    )
     updated_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
+        server_default=func.now(), onupdate=func.now(), init=False
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="portfolios")
+    user: Mapped["User"] = relationship(back_populates="portfolios", init=False)
     holdings: Mapped[List["Holding"]] = relationship(
-        back_populates="portfolio", cascade="all, delete-orphan"
+        back_populates="portfolio", cascade="all, delete-orphan", init=False
     )
     transactions: Mapped[List["Transaction"]] = relationship(
-        back_populates="portfolio", cascade="all, delete-orphan"
+        back_populates="portfolio", cascade="all, delete-orphan", init=False
     )
 
     def __repr__(self):
