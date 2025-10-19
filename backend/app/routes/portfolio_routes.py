@@ -29,19 +29,31 @@ def model_to_dict(obj):
     Generic helper to convert a SQLAlchemy model instance to a dictionary.
     Handles both legacy and dataclass-mapped models.
     """
-    if is_dataclass(obj):
-        return {k: sanitize_value(v) for k, v in asdict(obj).items()}
+    # For SQLAlchemy models, only serialize columns to avoid circular recursion.
+    # This works for both traditional and dataclass-based models.
     if hasattr(obj, "__table__"):
         return {
             c.name: sanitize_value(getattr(obj, c.name))
             for c in obj.__table__.columns
         }
-    # Fallback for other objects, though less robust
-    return {
-        k: sanitize_value(v)
-        for k, v in obj.__dict__.items()
-        if not k.startswith("_")
-    }
+    # For non-SQLAlchemy dataclasses.
+    if is_dataclass(obj):
+        return {k: sanitize_value(v) for k, v in asdict(obj).items()}
+    # Fallback for other objects.
+    return {k: sanitize_value(v) for k, v in obj.__dict__.items() if not k.startswith("_")}
+
+
+def get_portfolio_for_user(portfolio_id: int, user_id: int):
+    """
+    Fetches a portfolio by its ID, ensuring it belongs to the specified user.
+    Returns the portfolio object or None if not found.
+    """
+    return db.session.execute(
+        db.select(Portfolio).filter_by(
+            portfolio_id=portfolio_id,
+            user_id=user_id
+        )
+    ).scalar_one_or_none()
 
 
 # GET /portfolios -> list all portfolios for the logged-in user
@@ -87,9 +99,7 @@ def create_portfolio():
 @jwt_required()
 def get_portfolio(portfolio_id: int):
     user_id = get_jwt_identity()
-    portfolio = db.session.execute(
-        db.select(Portfolio).filter_by(portfolio_id=portfolio_id, user_id=user_id)
-    ).scalar_one_or_none()
+    portfolio = get_portfolio_for_user(portfolio_id, user_id)
     if not portfolio:
         return jsonify({"message": "Portfolio not found"}), HTTPStatus.NOT_FOUND
     return jsonify(model_to_dict(portfolio)), HTTPStatus.OK
@@ -100,9 +110,7 @@ def get_portfolio(portfolio_id: int):
 @jwt_required()
 def delete_portfolio(portfolio_id: int):
     user_id = get_jwt_identity()
-    portfolio = db.session.execute(
-        db.select(Portfolio).filter_by(portfolio_id=portfolio_id, user_id=user_id)
-    ).scalar_one_or_none()
+    portfolio = get_portfolio_for_user(portfolio_id, user_id)
     if not portfolio:
         return jsonify({"message": "Portfolio not found"}), HTTPStatus.NOT_FOUND
 
@@ -116,9 +124,7 @@ def delete_portfolio(portfolio_id: int):
 @jwt_required()
 def get_holdings(portfolio_id: int):
     user_id = get_jwt_identity()
-    portfolio = db.session.execute(
-        db.select(Portfolio).filter_by(portfolio_id=portfolio_id, user_id=user_id)
-    ).scalar_one_or_none()
+    portfolio = get_portfolio_for_user(portfolio_id, user_id)
     if not portfolio:
         return jsonify({"message": "Portfolio not found"}), HTTPStatus.NOT_FOUND
 
@@ -133,9 +139,7 @@ def get_holdings(portfolio_id: int):
 @jwt_required()
 def get_transactions(portfolio_id: int):
     user_id = get_jwt_identity()
-    portfolio = db.session.execute(
-        db.select(Portfolio).filter_by(portfolio_id=portfolio_id, user_id=user_id)
-    ).scalar_one_or_none()
+    portfolio = get_portfolio_for_user(portfolio_id, user_id)
     if not portfolio:
         return jsonify({"message": "Portfolio not found"}), HTTPStatus.NOT_FOUND
 
