@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.extensions import Base
 
 if TYPE_CHECKING:
-    from app.models import Holding, Transaction
+    from app.models import Holding, Transaction, TimeSeries
 
 
 class Stock(Base):
@@ -28,6 +28,9 @@ class Stock(Base):
         back_populates="stock", init=False, default_factory=list
     )
     transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="stock", init=False, default_factory=list
+    )
+    time_series: Mapped[List["TimeSeries"]] = relationship(
         back_populates="stock", init=False, default_factory=list
     )
 

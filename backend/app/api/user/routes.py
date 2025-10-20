@@ -3,7 +3,7 @@ from http import HTTPStatus
 import datetime
 from typing import Tuple, Dict, Any
 
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from app.api.user import services as user_services
 
@@ -100,9 +100,3 @@ def login_user_route() -> Tuple[Response, int]:
 
     response_data = {"access_token": access_token, "user": _user_to_dict(user)}
     return jsonify(response_data), HTTPStatus.OK
-
-
-@auth_bp.route("/auth/test", methods=["GET"])
-@jwt_required()
-def hello():
-    return "Hello World"

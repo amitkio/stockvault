@@ -1,5 +1,5 @@
 from flask import Flask
-from app.extensions import db, jwt
+from app.extensions import db, jwt, socketio
 from app.config import Config
 
 
@@ -12,16 +12,19 @@ def create_app() -> Flask:
 
     jwt.init_app(flask_app)
     db.init_app(flask_app)
+    socketio.init_app(flask_app)
 
     from app.api.user.routes import auth_bp
 
     flask_app.register_blueprint(auth_bp)
 
-    
+    from app.api.stocks.routes import stocks_bp
+
+    flask_app.register_blueprint(stocks_bp)
+
     from app.routes.portfolio_routes import portfolio_bp
 
     flask_app.register_blueprint(portfolio_bp)
-
 
     @flask_app.after_request
     def add_cors_headers(response):
@@ -39,9 +42,14 @@ def create_app() -> Flask:
         identity: str = jwt_data["sub"]
         return db.session.scalar(db.select(User).filter_by(user_id=identity))
 
-    @flask_app.before_request
-    def init_db():
+    with flask_app.app_context():
+        from app.tasks.data_fetch import fetch_and_update_stock_data, start_websocket
+        import threading
+
         db.create_all()
-        flask_app.before_request_funcs[None].remove(init_db)
+        fetch_and_update_stock_data()
+        websocket_thread = threading.Thread(target=start_websocket, args=(flask_app,))
+        websocket_thread.daemon = True
+        websocket_thread.start()
 
     return flask_app
