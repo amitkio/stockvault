@@ -1,7 +1,6 @@
 from decimal import Decimal
 from sqlalchemy.orm import Session
 from ..models import (
-    db,
     Portfolio,
     Stock,
     Holding,
@@ -9,6 +8,7 @@ from ..models import (
     TransactionTypeEnum,
     TimeSeries,
 )
+from ..extensions import db
 
 class PortfolioServiceError(Exception):
     """Custom exception for portfolio service errors."""
@@ -19,10 +19,11 @@ class PortfolioServiceError(Exception):
 def get_latest_stock_price(db_session: Session, stock_id: int) -> Decimal:
     """Fetches the most recent closing price for a stock."""
     latest_price_entry = (
-        db_session.query(TimeSeries.close)
-        .filter(TimeSeries.stock_id == stock_id)
-        .order_by(TimeSeries.date.desc())
-        .first()
+        db_session.execute(
+            db.select(TimeSeries.close)
+            .filter(TimeSeries.stock_id == stock_id)
+            .order_by(TimeSeries.date.desc())
+        ).scalar_one_or_none()
     )
     if not latest_price_entry:
         raise PortfolioServiceError("No price data available for this stock.")
@@ -42,9 +43,11 @@ def execute_transaction(
     price_per_share = get_latest_stock_price(db_session, stock.stock_id)
     total_cost = quantity * price_per_share
 
-    holding = db_session.query(Holding).filter_by(
-        portfolio_id=portfolio.portfolio_id, stock_id=stock.stock_id
-    ).one_or_none()
+    holding = db_session.execute(
+        db.select(Holding).filter_by(
+            portfolio_id=portfolio.portfolio_id, stock_id=stock.stock_id
+        )
+    ).scalar_one_or_none()
 
     if transaction_type == TransactionTypeEnum.BUY:
         if portfolio.cash_balance < total_cost:
