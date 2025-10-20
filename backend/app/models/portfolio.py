@@ -1,9 +1,10 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import List, TYPE_CHECKING
+from decimal import Decimal
 
-from sqlalchemy import String, func, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, func, ForeignKey, Numeric
+from sqlalchemy.orm import Mapped, mapped_column, relationship, Session
 
 from app.extensions import Base
 
@@ -22,8 +23,14 @@ class Portfolio(Base):
     portfolio_id: Mapped[int] = mapped_column(
         primary_key=True, autoincrement=True, init=False
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), unique=True)
     portfolio_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    # Add a cash balance to the portfolio. Defaulting to 100,000 for new portfolios
+    # for demonstration/simulation purposes.
+    cash_balance: Mapped[Decimal] = mapped_column(
+        Numeric(18, 4), nullable=False, default=Decimal("100000.00")
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(), init=False
     )
@@ -32,7 +39,7 @@ class Portfolio(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="portfolios", init=False)
+    user: Mapped["User"] = relationship(back_populates="portfolio", init=False)
     holdings: Mapped[List["Holding"]] = relationship(
         back_populates="portfolio", cascade="all, delete-orphan", init=False
     )

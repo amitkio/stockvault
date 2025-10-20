@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class User(Base):
     """
     Represents a user in the 'users' table.
-    A user can own multiple portfolios.
+    A user can own one portfolio.
     """
 
     __tablename__ = "users"
@@ -27,8 +27,8 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now(), init=False)
 
-    portfolios: Mapped[List["Portfolio"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", init=False, default_factory=list
+    portfolio: Mapped["Portfolio"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", init=False, uselist=False
     )
 
     def __repr__(self):

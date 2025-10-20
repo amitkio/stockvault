@@ -6,11 +6,6 @@ from .transaction import Transaction, TransactionTypeEnum
 from .time_series import TimeSeries
 
 __all__ = [
-    "User",
-    "Portfolio",
-    "Stock",
-    "Holding",
-    "Transaction",
-    "TransactionTypeEnum",
-    "TimeSeries",
+    "User", "Portfolio", "Stock", "Holding", "Transaction", "TransactionTypeEnum",
+    "TimeSeries"
 ]

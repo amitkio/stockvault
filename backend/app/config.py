@@ -6,8 +6,6 @@ load_dotenv()
 
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = "sqlite:///database.sqlite3"
-    SECRET_KEY = "13h4oua2ron-9u"
     """Application configuration from environment variables."""
 
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")

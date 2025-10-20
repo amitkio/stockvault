@@ -1,18 +1,18 @@
 from flask import Flask
-from app.extensions import db, jwt, socketio
+from app.extensions import db, jwt
+from app.models import User
+from flask_cors import CORS
 from app.config import Config
 
-
-from app.models import User
-
-
-def create_app() -> Flask:
+def create_app(config_object=Config) -> Flask:
     flask_app = Flask(__name__)
-    flask_app.config.from_object(Config)
+    flask_app.config.from_object(config_object)
 
     jwt.init_app(flask_app)
     db.init_app(flask_app)
-    socketio.init_app(flask_app)
+
+    # Initialize CORS and allow all origins for development
+    CORS(flask_app)
 
     from app.api.user.routes import auth_bp
 
@@ -22,34 +22,32 @@ def create_app() -> Flask:
 
     flask_app.register_blueprint(stocks_bp)
 
-    from app.routes.portfolio_routes import portfolio_bp
+    
+    from app.routes.portfolio_routes import portfolio_bp_single
 
-    flask_app.register_blueprint(portfolio_bp)
-
-    @flask_app.after_request
-    def add_cors_headers(response):
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add(
-            "Access-Control-Allow-Headers", "Content-Type,Authorization"
-        )
-        response.headers.add(
-            "Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS"
-        )
-        return response
+    flask_app.register_blueprint(portfolio_bp_single)
 
     @jwt.user_lookup_loader
     def user_lookup_callback(_jwt_header, jwt_data):
         identity: str = jwt_data["sub"]
         return db.session.scalar(db.select(User).filter_by(user_id=identity))
-
-    with flask_app.app_context():
+    
+    # Register a CLI command to initialize the database and start tasks
+    @flask_app.cli.command("init-app")
+    def init_app_command():
+        """Initializes the database and starts background tasks."""
         from app.tasks.data_fetch import fetch_and_update_stock_data, start_websocket
         import threading
-
+        
+        print("Creating database tables...")
         db.create_all()
+        print("Fetching initial stock data...")
         fetch_and_update_stock_data()
+        print("Starting WebSocket listener in a background thread...")
         websocket_thread = threading.Thread(target=start_websocket, args=(flask_app,))
         websocket_thread.daemon = True
         websocket_thread.start()
+        print("Initialization complete.")
+
 
     return flask_app
