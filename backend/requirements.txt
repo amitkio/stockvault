@@ -4,3 +4,7 @@ flask-jwt-extended
 yfinance
 lxml
 Flask-SocketIO
+
+Flask-Migrate
+psycopg2-binary
+python-dotenv

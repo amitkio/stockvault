@@ -72,7 +72,12 @@ def list_portfolios():
 @jwt_required()
 def create_portfolio():
     user_id = get_jwt_identity()
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not data:
+        return (
+            jsonify({"message": "Invalid JSON or missing request body."}),
+            HTTPStatus.BAD_REQUEST,
+        )
 
     name = data.get("portfolio_name") if data else None
     if not name:
