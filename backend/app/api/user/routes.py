@@ -3,11 +3,9 @@ from http import HTTPStatus
 import datetime
 from typing import Tuple, Dict, Any
 
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_current_user
 from flask_jwt_extended.exceptions import NoAuthorizationError
 from app.api.user import services as user_services
-
-import traceback
 
 
 class ApiError(Exception):
@@ -33,7 +31,6 @@ def handle_not_found(error) -> Tuple[Response, int]:
 
 @auth_bp.errorhandler(NoAuthorizationError)
 def handle_no_auth(error: Exception) -> Tuple[Response, int]:
-    traceback.print_exc()
     return jsonify(
         {"message": "You must be logged in to access this resource."}
     ), HTTPStatus.FORBIDDEN
@@ -41,7 +38,6 @@ def handle_no_auth(error: Exception) -> Tuple[Response, int]:
 
 @auth_bp.errorhandler(Exception)
 def handle_generic_error(error: Exception) -> Tuple[Response, int]:
-    traceback.print_exc()
     return jsonify(
         {"message": "An unexpected internal server error occurred"}
     ), HTTPStatus.INTERNAL_SERVER_ERROR
@@ -100,3 +96,12 @@ def login_user_route() -> Tuple[Response, int]:
 
     response_data = {"access_token": access_token, "user": _user_to_dict(user)}
     return jsonify(response_data), HTTPStatus.OK
+
+
+@auth_bp.route("/who")
+@jwt_required()
+def whoAmI():
+    user = get_current_user()
+    user_data = {"username": user.username}
+
+    return jsonify(user_data), 200

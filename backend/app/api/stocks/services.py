@@ -10,7 +10,7 @@ def get_historical_data(stock_id):
     return (
         db.session.query(TimeSeries)
         .filter_by(stock_id=stock_id)
-        .order_by(TimeSeries.date.asc())
+        .order_by(TimeSeries.date.desc())
         .all()
     )
 

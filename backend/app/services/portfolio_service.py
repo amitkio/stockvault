@@ -10,6 +10,7 @@ from ..models import (
 )
 from ..extensions import db
 
+
 class PortfolioServiceError(Exception):
     """Custom exception for portfolio service errors."""
 
@@ -18,16 +19,15 @@ class PortfolioServiceError(Exception):
 
 def get_latest_stock_price(db_session: Session, stock_id: int) -> Decimal:
     """Fetches the most recent closing price for a stock."""
-    latest_price_entry = (
-        db_session.execute(
-            db.select(TimeSeries.close)
-            .filter(TimeSeries.stock_id == stock_id)
-            .order_by(TimeSeries.date.desc())
-        ).scalar_one_or_none()
-    )
+    latest_price_entry = db_session.execute(
+        db.select(TimeSeries.close)
+        .filter(TimeSeries.stock_id == stock_id)
+        .order_by(TimeSeries.date.desc())
+        .limit(1)
+    ).scalar_one_or_none()
     if not latest_price_entry:
         raise PortfolioServiceError("No price data available for this stock.")
-    return Decimal(str(latest_price_entry.close))
+    return Decimal(str(latest_price_entry))
 
 
 def execute_transaction(
@@ -68,7 +68,9 @@ def execute_transaction(
             # Update existing holding
             old_total_value = holding.quantity * holding.average_cost_per_share
             new_quantity = holding.quantity + quantity
-            holding.average_cost_per_share = (old_total_value + total_cost) / new_quantity
+            holding.average_cost_per_share = (
+                old_total_value + total_cost
+            ) / new_quantity
             holding.quantity = new_quantity
 
     elif transaction_type == TransactionTypeEnum.SELL:

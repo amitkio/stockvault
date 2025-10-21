@@ -25,6 +25,7 @@ def get_all_stocks_route():
     results = []
     for stock, latest_ohlc in stocks_data:
         stock_details = {
+            "stock_id": stock.stock_id,
             "symbol": stock.symbol,
             "company_name": stock.company_name,
             "sector": stock.sector,

@@ -1,4 +1,4 @@
-from app.models import User
+from app.models import User, Portfolio
 from app.extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -15,6 +15,10 @@ def register_user(username, password, email):
     new_user = User(username=username, password_hash=hashed_password, email=email)
     db.session.add(new_user)
     db.session.commit()
+    portfolio = Portfolio(new_user.user_id, portfolio_name="My Portfolio")
+    db.session.add(portfolio)
+    db.session.commit()
+
     return new_user
 
 
